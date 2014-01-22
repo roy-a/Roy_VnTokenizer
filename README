@@ -123,6 +123,7 @@ There are three main scripts in this repository in the /scripts/ folder.
 where <input file name> is the name of the input raw text file to be tokenized, <output file name> is the output file name where tokenized text is to be written. The <model file name> is the name of the tokenizer model containing mainly the lexicon and unigram probabilities. This model has already been trained and provided in the /scripts/ folder as /scripts/model.pkl 
 
 Example usage:
+cd scripts
 ./vn_tokenizer.py ./input1.tkn ./input1.tkn.wseg1
 
 (The example file input1.tkn with reference tokenization file input1.tkn.wseg was provided with JVnSegmenter.)
@@ -133,10 +134,15 @@ Usage: ./vn_tokens_evaluate.py <ref file name> <hyp file name>
 Here, <ref file name> is the reference tokenization, while <hyp file name> is the output from vn_tokenizer.py
 
 Example usage: 
+cd scripts
 ./vn_tokens_evaluate.py ./input1.tkn.wseg ./input1.tkn.wseg1
 P = 0.924, R = 0.924, F = 0.924
 
 * runExperiments.py - I wrote this script to run different experiments to evaluate different options (data sources for building the lexicon, algorithms) for tokenization. Detailed comments are provided inside the script. In particular, the Maximum Matching algorithm is implemented within line 264 and line 302. The enhanced Maximum Matching (MM+) algorithm is implemented within line 306 and line 409. This script takes as input the train and test files, the lexicon, locations and person names files mentioned before. In addition, at the end of the script, from line 489 onwards, I provided detailed results, observations and comments.
+
+Usage:
+cd scripts
+./runExperiments.py
 
 In brief, the performance of the algorithms is summarized as follows:
 
