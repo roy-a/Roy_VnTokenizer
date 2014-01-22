@@ -159,9 +159,13 @@ From the errors made by the algorithms, it is observed that most of the errors a
 
 The second direction is to download more data to better estimate the probabilities. Actually, I found another good source of data, the Vietnamese TreeBank, 
 http://vlsp.vietlp.org:8080/demo/?page=resources&lang=en
-However, this requires signing a User Agreement and restricts its use to academic and research purposes. 
+Again, this data is manually segmented, hence quite useful. However, this requires signing a User Agreement and restricts its use to academic and research purposes. 
+
+Note that in additional to annotated text sources, we may also use raw text such as from the Wikipedia, and try to automatically learn words from bigram collocations, i.e. if we find that two words are appearing side by side quite often, we may increase its probability of being a compound word.
 
 In the current project, the data used to test these algorithms was mainly drawn from newspaper articles. However, there are other sources of text such as Twitter feeds, Facebook posts etc. which may include abbrevaitions and new words. The third direction would be to explore such alternative text genres to adapt the tokenization system to different domains. 
+
+
 
 
 
