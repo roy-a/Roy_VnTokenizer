@@ -1,0 +1,169 @@
+Project: Vietnamese tokenization.
+Anindya Roy,
+22-1-14.
+
+=================================================================================
+
+1] Task definition: Vietnamese tokenization.
+
+Given a piece of raw text in Vietnamese, the objective is to segment it into distinct words or tokens. 
+
+Although Vietnamese is written in a variant of the Latin alphabet, its linguistic mechanism is close to syllabic systems like Chinese: white space between consecutive letters do not indicate word boundaries in Vietnamese. Rather, they indicate syllable boundaries. In Vietnamese, 85% of words spread over multiple syllables, separated by spaces. About 80% of these syllables are also meaningful words themselves. Hence, spaces cannot be used to segment a text into words. This is the main issue with Vietnamese tokenization.
+
+Due to this issue, there may be two types of ambiguities in Vietnamese tokenization:
+* Cross ambiguity: When two or more consecutive syllables are meaningful words individually and together they form one meaningful word as a whole, then it is not clear if they should be set as a single word or separate words.
+* Overlap ambiguity: Given three consecutive syllables, a, b, and c, if a_b, c, a, and b_c are all meaningful words, then both (a, b_c) and (a_b, c) are possible tokenizations.
+
+
+
+2] Literature survey.
+
+The following articles provide a good overview of the state of the art in Vietnamese tokenization and related aspects. For convenience, these articles are provided with this repository.
+
+* File: literature/viet1.pdf : Nguyen et al., "Developing Tools and Building Linguistic Resources for Vietnamese Morpho-Syntactic Processing" - General article, gives a good idea of Vietnamese language characteristics.
+
+* File: literature/viet2.pdf : Pham et al., "A Hybrid Approach to Vietnamese Word Segmentation using Part of Speech tags" - Article on Vietnamese tokenization using POS tags.
+
+* File: literature/viet3.pdf : Dinh et al., "Word segmentation of Vietnamese texts: a comparison of approaches", LREC 2008. - Useful article which compares three standard algorithms for Vietnamese tokenization, namely vnTokenizer, PVnSeg and JVnSegmenter. 
+
+* File: literature/viet4.pdf : Nguyen et al., "Vietnamese Word Segmentation with CRFs and SVMs: An Investigation". -> Useful article on JVnSegmenter algorithm. Did not use this approach in this project but used the manually annotated data used in training and testing the algorithms in this work.
+
+* File: literature/viet5.ps : Le et al, "A Hybrid Approach to Word Segmentation of Vietnamese Texts". -> Useful article on vnTokenizer approach. Followed closely in this project. 
+
+* File: literature/viet6.pdf : Nguyen et al., "A Lexicon for Vietnamese Language Processing", Good general article, not directly related to tokenization.
+
+3] Comparison of algorithms.
+
+Among all these algorithms, the fundamental algorithm is Maximum Matching (MM). This algorithm selects the segmentation of syllables resulting in the minimum number of words. The algorithm first determines the longest syllable sequence which starts at the current position and is listed in the lexicon. It sets the longest valid sequence as one word, moves the position pointer immediately after the sequence, and starts to search again. Although greedy, this method works well in practice because it is found that longer words are more likely to be correct than short words. 
+
+vnTokenizer augments the MM algorithm by using bigram statistics to resolve overlap ambiguities. But in viet5.ps, the authors show that the improvement over MM due to this step is only about 0.2 to 0.3 %. According to the authors, this could be due to insufficient amount of data to estimate the bigram statistics.
+
+PVnSeg augments MM by text analysis and pattern matching to implement a series of heuristics for the detection of compound formulas such as proper nouns, common abbreviations, dates, numbers, URLs, e-mail addresses, etc. While the precise steps are not described, results reported in viet3.pdf shows this to be a potential approach to improve on MM. 
+
+JVnSegmenter follows an entirely different approach using CRFs and SVMs. Although it outperforms MM on their own data, it fails to outperform PVnSeg when tested on other larger amount of data, according to viet3.pdf. Open source implementations of these algorithms are available. However, these are not used in this project. All code was developed by me.
+
+
+3] Algorithms implemented.
+
+I chose to first implement the Maximum Matching (MM) algorithm due to the fact that it is the basis of two of the standard algorithms, vnTokenizer and PVnSeg, one of which (PVnSeg) outperforms all others in the LREC 2008 article. Furthermore, I also added a number of improvements to the algorithm which I named enhanced Maximum Matching (MM+). These improvements mainly involve some initial regular expression parsing, lookahead of two syllables before deciding to terminate a word and overlap ambiguity resolution using unigram instead of bigram probabilities. (I chose unigram probabilities due to the fact that viet5.ps showed insufficient data as being one of the issues with the bigram approach.) 
+
+On a 5-fold cross-validation experiment using data from the experiments reported in viet4.pdf, I obtained Precision, Recall and F-ratio values of 92.9%, 92.6% and 92.7%. respectively. A small improvement of 0.5% was achieved by MM+ over MM. This is comparable to similar results showed in viet4.pdf but using CRFs and SVMs. 
+
+All code is provided with this repository. Please see Section 5] Scripts for details.
+
+
+4] Data.
+
+I collected data from various sources. Note that for creating the lexicon and training unigram probabilities for the MM+ algorithm, we need manually annotated text with already segmented words.
+
+The lexicon was created by assembling words from the following sources:
+
+* A Vietnamese dictionary.
+* A list of location names in Vietnamese
+* A list of person names in Vietnamese
+ 
+Download link for these files:
+http://sourceforge.net/projects/jvnsegmenter/files/jvnsegmenter/JVnSegmenter/JVnSegmenter-1.0.tar.gz/download
+
+After untaring the .gz archive, the above 3 files will be in :
+
+JVnSegmenter/models/VNDic_UTF-8.txt
+JVnSegmenter/models/vnlocations.txt
+JVnSegmenter/models/vnpernames.txt
+
+For convenience, all three files are also provided with this repository in /data/ .
+
+In addition, we have 5 train files and 5 test files for the 5-fold cross-validation experiments. Each file contains Vietnamese text, one syllable per line, where each syllable is tagged with B (Begin word), I (Inside word) or O (Outside) tag. These are the files that I used for testing the algorithms and evaluating them. 
+
+The text in these files are from newspaper articles and deal with a variety of topics including economics, information technology, education, vehicles, sports, law, culture and society. Details about all these files, their original sources, etc. are provided in viet4.pdf
+
+Download link for these files:
+http://sourceforge.net/projects/jvnsegmenter/files/jvnsegmenter/JVnSegmenter/trainingdata.tar.gz/download
+
+After untaring the .gz archive, the folder will contain 5 train files, 
+train1.iob2
+train2.iob2
+train3.iob2
+train4.iob2
+train5.iob2 
+
+and 5 test files, 
+test1.iob2
+test2.iob2
+test3.iob2
+test4.iob2
+test5.iob2. 
+
+For convenience, these files are also provided with this repository in /data/. The statistics of the test files are as follows:
+
+# Run 0: nSents = 1561, nWds = 24865, nSyls = 34405                                  
+# Run 1: nSents = 1561, nWds = 26189, nSyls = 36189
+# Run 2: nSents = 1561, nWds = 25474, nSyls = 35392                               
+# Run 3: nSents = 1561, nWds = 25055, nSyls = 34939
+# Run 4: nSents = 1562, nWds = 25910, nSyls = 35839
+# =================================================
+# Avg. : nSents = 1561, nWds = 25498, nSyls = 35352
+
+nSents = Total no. of sentences
+nWds = Total no. of words
+nSyls = Total no. of syllables.
+
+Note that for the cross-validation experiments, for each run, the train file of that run (say train1.iob2) was used to augment the lexicon and estimate the unigram probabilities. The resulting model was evaluated on the corresponding test file (test1.iob2). The train file and the corresponding test file from each run was built from non-overlapping text sources.
+
+
+
+5] Scripts, algorithm implementation, evaluation.
+
+There are three main scripts in this repository in the /scripts/ folder.
+
+* vn_tokenizer.py - I wrote this script to implement the enhanced Maximum Matching algorithm (MM+) to tokenize raw Vietnamese text. In the output, the tokens are indicated by being delimited by square brackets []. Please run this script from within the /scripts/ folder. Usage directions may be obtained by trying to run the script without arguments. In brief, the syntax is:
+
+./vn_tokenizer.py <input file name> <output file name> <model file name>
+
+where <input file name> is the name of the input raw text file to be tokenized, <output file name> is the output file name where tokenized text is to be written. The <model file name> is the name of the tokenizer model containing mainly the lexicon and unigram probabilities. This model has already been trained and provided in the /scripts/ folder as /scripts/model.pkl 
+
+Example usage:
+./vn_tokenizer.py input1.tkn input1.tkn.wseg1
+
+(The example file input1.tkn with tokenization file input1.tkn.wseg was provided with JVnSegmenter.)
+
+* vn_tokens_evaluate.py - I wrote this script to evaluate the tokenization carried out by vn_tokenizer.py in terms of precision, recall and F-ratio. For this, I used a dynamic time warping algorithm to calculate the longest common subsequence between the reference and hypothesized tokenizations. 
+
+Usage: ./vn_tokens_evaluate.py <ref file name> <hyp file name>
+Here, <ref file name> is the reference tokenization, while <hyp file name> is the output from vn_tokenizer.py
+
+Example usage: 
+./vn_tokens_evaluate.py ./input1.tkn.wseg ./input1.tkn.wseg1
+P = 0.924, R = 0.924, F = 0.924
+
+* runExperiments.py - I wrote this script to run different experiments to evaluate different options (data sources for building the lexicon, algorithms) for tokenization. Detailed comments are provided inside the script. In particular, the Maximum Matching algorithm is implemented within line 264 and line 302. The enhanced Maximum Matching (MM+) algorithm is implemented within line 306 and line 409. This script takes as input the train and test files, the lexicon, locations and person names files mentioned before. In addition, at the end of the script, from line 489 onwards, I provided detailed results, observations and comments.
+
+In brief, the performance of the algorithms is summarized as follows:
+
+# DATA FOR LEXICON + ALGORITHM                     : F-RATIO (Average over 5 cross-validation folds)
+#============================================================
+# train + MM                                       : 0.919
+# (train, locations, person names) + MM            : 0.921
+# (train, lexicon, locations, person names) + MM   : 0.922
+# (train, lexicon, locations, person names + MM+)  : 0.927
+#============================================================
+
+Here 'train' denotes the trainX.iob2 file corresponding to cross-validation run X where X = 1,..,5. As mentioned above, full details of each cross-validation run are provided in runExperiments.py, from line 489 onwards.
+
+
+6] Conclusion, future directions.
+
+We have obtained a moderately reliable tokenization system which achieves approximately 90% F-ratio on a reasonable amount of test data drawn from a variety of topics. 
+
+From the errors made by the algorithms, it is observed that most of the errors are due to cross and overlap ambiguities.  Hence, the first direction is to explore more sophisticated approaches to deal with these ambiguities. In this case, care should be taken to make the method generalizable (unlike CRFs or SVMS in viet4.pdf). One idea is to use word association measures such as Pointwise Mutual Information to measure how all words in a particular word segmentation are "coherent" to each other, and then choose that segmentation with the highest average coherence. We may compare this method with the unigram or bigram approach. It is hypothesized that the problem of data insufficiency could be less severe in this case. 
+
+The second direction is to download more data to better estimate the probabilities. Actually, I found another good source of data, the Vietnamese TreeBank, 
+http://vlsp.vietlp.org:8080/demo/?page=resources&lang=en
+However, this requires signing a User Agreement and restricts its use to academic and research purposes. 
+
+In the current project, the data used to test these algorithms was mainly drawn from newspaper articles. However, there are other sources of text such as Twitter feeds, Facebook posts etc. which may include abbrevaitions and new words. The third direction would be to explore such alternative text genres to adapt the tokenization system to different domains. 
+
+
+
+
+
