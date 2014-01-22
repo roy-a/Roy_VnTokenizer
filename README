@@ -54,7 +54,7 @@ All code is provided with this repository. Please see Section 5] Scripts for det
 
 4] Data.
 
-I collected data from various sources. Note that for creating the lexicon and training unigram probabilities for the MM+ algorithm, we need manually annotated text with already segmented words.
+I collected data from various sources. Note that for creating the lexicon, training unigram probabilities for the MM+ algorithm and for evaluating the algorithms, we need manually tokenized text with already segmented words.
 
 The lexicon was created by assembling words from the following sources:
 
@@ -65,15 +65,15 @@ The lexicon was created by assembling words from the following sources:
 Download link for these files:
 http://sourceforge.net/projects/jvnsegmenter/files/jvnsegmenter/JVnSegmenter/JVnSegmenter-1.0.tar.gz/download
 
-After untaring the .gz archive, the above 3 files will be in :
+After untaring the .gz archive, the 3 files above will be in :
 
 JVnSegmenter/models/VNDic_UTF-8.txt
 JVnSegmenter/models/vnlocations.txt
 JVnSegmenter/models/vnpernames.txt
 
-For convenience, all three files are also provided with this repository in /data/ .
+For convenience, all three files are also provided in this repository in data/ .
 
-In addition, we have 5 train files and 5 test files for the 5-fold cross-validation experiments. Each file contains Vietnamese text, one syllable per line, where each syllable is tagged with B (Begin word), I (Inside word) or O (Outside) tag. These are the files that I used for testing the algorithms and evaluating them. 
+In addition, I have used 5 train files and 5 test files for the 5-fold cross-validation experiments. Each file contains manually annotated Vietnamese text, one syllable per line, with each syllable tagged with B (Begin word), I (Inside word) or O (Outside) tag. From these tags, we can obtain the tokenization. These are the files that I used for training and evaluating the algorithms. 
 
 The text in these files are from newspaper articles and deal with a variety of topics including economics, information technology, education, vehicles, sports, law, culture and society. Details about all these files, their original sources, etc. are provided in viet4.pdf
 
@@ -138,7 +138,9 @@ cd scripts
 ./vn_tokens_evaluate.py ./input1.tkn.wseg ./input1.tkn.wseg1
 P = 0.924, R = 0.924, F = 0.924
 
-* runExperiments.py - I wrote this script to run different experiments to evaluate different options (data sources for building the lexicon, algorithms) for tokenization. Detailed comments are provided inside the script. In particular, the Maximum Matching algorithm is implemented within line 264 and line 302. The enhanced Maximum Matching (MM+) algorithm is implemented within line 306 and line 409. This script takes as input the train and test files, the lexicon, locations and person names files mentioned before. In addition, at the end of the script, from line 489 onwards, I provided detailed results, observations and comments.
+* runExperiments.py - I wrote this script to run different experiments to evaluate different options (data sources for building the lexicon, algorithms) for tokenization. This script takes as input the train and test files, the lexicon, locations and person names files mentioned before. It uses the train files for lexicon and unigram probabilities and the test files for evaluation. Note that although the test files contain manual tokenization information, this is not used to tokenize the files. The text in the test files is stripped of their B, I, O tags and converted into a sequence of syllables before running the algorithms. The tokenization information is used only to evaluate the algorithm outputs.
+
+Detailed comments are provided inside the script. In particular, the Maximum Matching algorithm is implemented within line 264 and line 302. The enhanced Maximum Matching (MM+) algorithm is implemented within line 306 and line 409.  In addition, at the end of the script, from line 489 onwards, I provided detailed results, observations and comments.
 
 Usage:
 cd scripts
@@ -157,11 +159,11 @@ In brief, the performance of the algorithms is summarized as follows:
 Here 'train' denotes the trainX.iob2 file corresponding to cross-validation run X where X = 1,..,5. As mentioned above, full details of each cross-validation run are provided in runExperiments.py, from line 489 onwards.
 
 
-6] Conclusion, future directions.
+6] Conclusions and future directions.
 
-We have obtained a moderately reliable tokenization system which achieves approximately 90% F-ratio on a reasonable amount of test data drawn from a variety of topics. 
+We have obtained a moderately reliable tokenization system which achieves approximately 90% F-ratio on a reasonable amount of test data drawn from a variety of topics. There is scope to improve the scripts. We may include various safety checks, e.g. language identification, UTF-8 encoding etc. Also, various choices related to the punctuation marks and special characters may be included, such as whether we should keep them in the output text or remove them. These details will vary from case to case and may be included in later versions.  
 
-From the errors made by the algorithms, it is observed that most of the errors are due to cross and overlap ambiguities.  Hence, the first direction is to explore more sophisticated approaches to deal with these ambiguities. In this case, care should be taken to make the method generalizable (unlike CRFs or SVMS in viet4.pdf). One idea is to use word association measures such as Pointwise Mutual Information to measure how all words in a particular word segmentation are "coherent" to each other, and then choose that segmentation with the highest average coherence. We may compare this method with the unigram or bigram approach. It is hypothesized that the problem of data insufficiency could be less severe in this case. 
+It was observed that most of the errors committed by the algorithms were due to cross or overlap ambiguities.  Hence, an important direction is to explore more sophisticated approaches to deal with these ambiguities. In this case, care should be taken to make the method generalizable (unlike CRFs or SVMS in viet4.pdf). One idea is to use word association measures such as Pointwise Mutual Information to measure how all words in a particular word segmentation are "coherent" to each other, and then choose that segmentation with the highest average coherence. We may compare this method with the unigram or bigram approach. It is hypothesized that the problem of data insufficiency could be less severe in this case. 
 
 The second direction is to download more data to better estimate the probabilities. Actually, I found another good source of data, the Vietnamese TreeBank, 
 http://vlsp.vietlp.org:8080/demo/?page=resources&lang=en
@@ -169,7 +171,7 @@ Again, this data is manually segmented, hence quite useful. However, this requir
 
 Note that in additional to annotated text sources, we may also use raw text such as from the Wikipedia, and try to automatically learn words from bigram collocations, i.e. if we find that two words are appearing side by side quite often, we may increase its probability of being a compound word.
 
-In the current project, the data used to test these algorithms was mainly drawn from newspaper articles. However, there are other sources of text such as Twitter feeds, Facebook posts etc. which may include abbrevaitions and new words. The third direction would be to explore such alternative text genres to adapt the tokenization system to different domains. 
+In the current project, the data used to test these algorithms was mainly drawn from newspaper articles. However, there are other sources of text such as Twitter feeds, Facebook posts etc. which may include abbreviations and new words. The third direction would be to explore such alternative text genres to adapt the tokenization system to different domains. 
 
 
 
