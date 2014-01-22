@@ -123,9 +123,9 @@ There are three main scripts in this repository in the /scripts/ folder.
 where <input file name> is the name of the input raw text file to be tokenized, <output file name> is the output file name where tokenized text is to be written. The <model file name> is the name of the tokenizer model containing mainly the lexicon and unigram probabilities. This model has already been trained and provided in the /scripts/ folder as /scripts/model.pkl 
 
 Example usage:
-./vn_tokenizer.py input1.tkn input1.tkn.wseg1
+./vn_tokenizer.py ./input1.tkn ./input1.tkn.wseg1
 
-(The example file input1.tkn with tokenization file input1.tkn.wseg was provided with JVnSegmenter.)
+(The example file input1.tkn with reference tokenization file input1.tkn.wseg was provided with JVnSegmenter.)
 
 * vn_tokens_evaluate.py - I wrote this script to evaluate the tokenization carried out by vn_tokenizer.py in terms of precision, recall and F-ratio. For this, I used a dynamic time warping algorithm to calculate the longest common subsequence between the reference and hypothesized tokenizations. 
 
