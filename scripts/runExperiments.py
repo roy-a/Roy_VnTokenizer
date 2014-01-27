@@ -28,7 +28,7 @@ USE_PERSONNAMES_FILE = 1
 USE_MM = 0 # Use Maximum Matching (MM) algorithm.
 USE_ENHANCED_MM = 1 # Use Enhanced MM algorithm
 
-DIR0 = '../' # .../Roy_VnTokenizer/.
+DIR0 = '../' # Top level directory: Roy_VnTokenizer/.
 
 # Values over cross-validation runs.
 P_ = 0 # Precision.
@@ -136,6 +136,7 @@ for RUN in xrange(nRuns): # 5 cross-validation folds.
 			line = re.sub('@@', '', line)
 			if line in ['Proverb', 'Idiom']:
 				del words_lex[-1] # Remove last word added.
+	f.close()
 
     # Reading locations file.
     if USE_LOCATIONS_FILE:
@@ -144,6 +145,7 @@ for RUN in xrange(nRuns): # 5 cross-validation folds.
 	for line in f:
 		word = ' '.join(line.split())
 		words_lex.append(word)
+	f.close()
 
     # Reading person names file.
     if USE_PERSONNAMES_FILE:
@@ -152,6 +154,7 @@ for RUN in xrange(nRuns): # 5 cross-validation folds.
 	for line in f:
 		word = ' '.join(line.split())
 		words_lex.append(word)
+	f.close()
 
     if 1:
 	words_lex = list(set(words_lex))

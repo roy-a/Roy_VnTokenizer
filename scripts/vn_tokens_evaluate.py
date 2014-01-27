@@ -18,13 +18,13 @@ if 1:
 		print '\n'
 		print "Vietnamese tokenizer evaluation. Version 0.1."
 		print "============================================="
-		print "Usage: ./vn_tokens_evaluate.py <hyp file name> <ref file name>"
-		print "<hyp file name> and <ref file name> are mandatory inputs."
+		print "Usage: ./vn_tokens_evaluate.py <ref file name> <hyp file name>"
+		print "<ref file name> and <hyp file name> are mandatory inputs."
 		print "The hyp file must contain hypothesized tokenization."
 		print "The ref file must contain reference tokenization."
 		print "All tokens must be surrounded by square brackets []." + '\n'
 		exit()
-	if n_args == 3:
+	if n_args >= 3:
 		input_file_name = sys.argv[1]
 		output_file_name = sys.argv[2]
 	
@@ -36,11 +36,11 @@ if 0:
 
 import os
 if not os.path.isfile(input_file_name):
-	print 'hyp file "' + input_file_name + '" does not exist. Retry with a valid file name.'
+	print 'ref file "' + input_file_name + '" does not exist. Retry with a valid file name.'
 	exit(1)
 
 if not os.path.isfile(output_file_name):
-	print 'ref file "' + output_file_name + '" does not exist. Retry with a valid file name.'
+	print 'hyp file "' + output_file_name + '" does not exist. Retry with a valid file name.'
 	exit(1)
 
 

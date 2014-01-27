@@ -1,4 +1,5 @@
 Project: Vietnamese tokenization.
+Phase I: Maximum Matching algorithm.
 Anindya Roy,
 22-1-14.
 
@@ -116,7 +117,7 @@ Note that for the cross-validation experiments, for each run, the train file of 
 
 There are three main scripts in this repository in the /scripts/ folder.
 
-* vn_tokenizer.py - I wrote this script to implement the enhanced Maximum Matching algorithm (MM+) to tokenize raw Vietnamese text. In the output, the tokens are indicated by being delimited by square brackets []. Please run this script from within the /scripts/ folder. Usage directions may be obtained by trying to run the script without arguments. In brief, the syntax is:
+* vn_tokenizer.py - I wrote this script to implement the enhanced Maximum Matching algorithm (MM+) to tokenize raw Vietnamese text. In the output, the tokens are indicated by being delimited by square brackets []. Please run this script from within the /scripts/ folder. Usage directions may be obtained by running the script without arguments. In brief, the syntax is:
 
 ./vn_tokenizer.py <input file name> <output file name> <model file name>
 
