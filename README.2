@@ -1,0 +1,136 @@
+Project: Vietnamese tokenization.
+Phase II: CRF algorithm.
+Anindya Roy,
+27-1-14.
+
+=================================================================================
+
+1] Vietnamese tokenizer using CRF
+=================================
+
+Dictionary-based greedy algorithms such as Maximum Matching perform reasonably well on the task of Vietnamese tokenization. However, their performance degrades in the presence of OOV words. Also, they are greedy and just seek to minimize the number of words. Hence, they cannot exploit contextual information around syllables to decide the choice of word segmentation.
+
+In this context, CRF is a statistical approach which has been found to perform well on sequence labeling tasks like NER and POS tagging. We can transform the Vietnamese tokenization task to one of sequence labeling by tagging each syllable with one of the tags: B_W (Beginning of a word), I_W (Inside of a word) or O (not a word). Then, a CRF may be used to solve the task. It is expected that such a statistical approach could learn from labeled examples and exploit contextual information. Also, it could better deal with OOV words.
+
+In viet4.pdf (provided in /literature/), such a CRF-based approach (named JVnSegmenter) is described. In this project, I have followed their implementation as described in their article. However, instead of using their tool FlexCRF, I have used CRFSuite for the actual CRF implementation. 
+
+The CRFSuite tool may be downloaded from :
+http://www.chokkan.org/software/crfsuite/
+
+According to the benchmark results here:
+http://www.chokkan.org/software/crfsuite/benchmark.html
+CRFSuite is currently one of the fastest implementations of CRF. (More comments on speed later on.)
+
+In this project, apart from the actual CRF implementation using CRFSuite, I have coded all other parts myself including feature extraction. For this, I took the main ideas from the JVnSegmenter article, and added/removed/modified a few features as I judged suitable. I implemented the following features:
+
+1. Syllable conjunction features (SC): All 1-, 2-, 3-gram syllable conjunctions within a context window of (-2,2) around the current syllable. Feature values are the n-grams.
+2. Sparse syllable conjunction features (SSC): Same as SC but sparse n-grams are also considered.
+3. Dictionary features (DICT): These are Boolean (0,1) features whose values are determined by whether the 1-, 2-, 3-gram SC features exist in a Vietnamese lexicon.
+4. External Resource features (ERS): These are Boolean (0,1) features whose values are determined whether the 1-, 2-, 3-gram SC features exist in a list of Vietnamese first names, middle names, last names, and location names.
+5. Miscellaneous features (MISC): These are Boolean (0,1) features whose values are determined by whether the current syllable satisfies certain regular expressions (for numbers, percentages, money, dates), has all or the first letter capitalized, is a punctuation or special character, etc. 
+
+Details about my scripts are provided in Section 3] below.
+
+
+2] Data.
+========
+
+The data for experiments is described in detail in the README file, Section 4]. I have carried out exactly the same set of 5-fold cross-validation experiments with the same set of data. 
+
+
+3] Scripts, installation.
+=========================
+
+Apart from the 3 scripts mentioned in the file README, in this phase I have added 2 more scripts in the /scripts/ folder, as follows:
+
+* vn_tokenizer_1.0.py - I wrote this script to implement the CRF algorithm with the best feature configuration demonstrated by the cross-validation experiments (described later). In fact, it allows the user to choose between the Maximum Matching (MM+) and CRF algorithms. Please run this script from within the /scripts/ folder. Usage directions may be obtained by running the script without arguments.
+
+Note that CRFSuite must be installed for the CRF option to work. Also, liblbfgs must be installed for CRFSuite to work. 
+
+So, first install liblfgs by downloading the tar.gz file from:
+https://github.com/downloads/chokkan/liblbfgs/liblbfgs-1.10.tar.gz
+
+then, untar the archive, enter the repository and run:
+
+./configure
+make
+make install
+
+Then, download the CRFSuite tar.gz file from 
+https://github.com/downloads/chokkan/crfsuite/crfsuite-0.12.tar.gz
+
+then, similarly, untar the archive, enter the repository and do:
+
+./configure
+make
+make install
+
+CRFSuite should work now. Note the command line to run the CRFSuite binary and the location of libcrfsuite-0.12.so - you will need to provide these to vn_tokenizer_1.0.py if they are not the preset defaults (see usage below).
+
+Usage syntax of vn_tokenizer_1.0.py:
+./vn_tokenizer.py <input file> <output file> <algorithm> <command to run crfsuite binary> <path to libcrfsuite-0.12.so>
+
+Only <input file> and <output file> are mandatory, indicating the input raw text file to be tokenized and the name of the output file where tokenized text will be written. The rest are optional. 
+
+The default <algorithm> is CRF. Choices are 'mm' (Maximum Matching) and 'crf' (CRF). 
+
+The default <command to run crfsuite binary> is 'crfsuite'.
+
+The default <path to libcrfsuite-0.12.so> is /usr/local/lib
+
+The command to run crfsuite binary and path to libcrfsuite-0.12.so MUST be provided if they do not match the defaults.
+
+Example runs of vn_tokenizer_1.0.py:
+
+./vn_tokenizer_1.0.py ./input1.tkn ./input1.tkn.wseg1 mm
+./vn_tokenizer_1.0.py ./input1.tkn ./input1.tkn.wseg2
+
+(The raw text input1.tkn was provided with JVnSegmenter.)
+
+Note the tokenization may be evaluated using my script vn_tokens_evaluate.py written in the first phase and described in README:
+
+./vn_tokens_evaluate.py ./input1.tkn.wseg ./input1.tkn.wseg1
+P = 0.924, R = 0.924, F = 0.924
+
+./vn_tokens_evaluate.py ./input1.tkn.wseg ./input1.tkn.wseg2
+P = 0.944, R = 0.983, F = 0.963
+
+Note the higher P, R, F values for CRF (.wseg2) compared to MM (.wseg1). (More comments on comparison in next section.)
+
+Note that pre-trained models for MM+ (./model.pkl) and for CRF (./model.crf and ./model.crf.pkl) are already provided in the /scripts/ folder. The script vn_tokenize_1.0.py uses these models. Please do not change/remove these files. 
+
+
+* runExperiments_CRF.py - I wrote this script to implement the CRF algorithm, study different feature functions and run 5-fold cross-validation experiments as I did with the MM+ algorithm, described in README. Details about the feature functions are described inside the script (and in Section 1 in this file). Lines 605 to 683 contain the experiment results for 3 CRF feature function sets (CRF1, CRF2 and CRF3) and also my comments and observations. 
+
+In brief, we summarize the experiment results as follows:
+===============================================================================
+System                        Avg. F-measure
+===============================================================================
+CRF1 (SC)                          0.905         
+CRF2 (SC + DICT)                   0.943
+CRF3 (SC + DICT + ERS + MISC)      0.944
+-------------------------------------------------------------------------------
+MM+ (best configuration)           0.927 (from runExperiments.py, earlier best)
+===============================================================================
+(In brackets (), the CRF feature functions used are mentioned.)
+
+We observe that CRFs perform better than MM+ by about 1.7%. This is true on average and also for each cross-validation run. My implementation CRF3 also performs slightly better than the best configuration of JVnSegmenter as given in the article viet4.pdf (page 7) in terms of P, R and F individually. However, this may not be very significant.
+
+Among the different CRF feature functions, the SC and DICT features seems to be the most useful. 
+
+In terms of speed, CRF3 takes about 20 minutes to train each fold, while JVnSegmenter takes 2 hours (viet4.pdf, page 8). The reason for this difference is unclear, however, the use of Python sets (hash table) in my script could be a factor. Especially the DICT features require searching the lexicon of 70K words for each syllable in the input text - so using a hash table to store the lexicon is beneficial. In my case, it drastically reduced the time for extracting features.
+
+
+4] Conclusions.
+===============
+
+It is evident from the experiments that CRF provides a practical and efficient statistical approach for Vietnamese tokenization. It performs slightly better than dictionary-based greedy algorithms on this data set. This should be particularly interesting for data with a high OOV rate.
+
+It is noteworthy to repeat some points mentioned in the first README file. First, the current data set is taken from newspaper articles. Data from other genres such as social media (Twitter, Facebook), emails and SMS could also be harnessed to build and evaluate a more powerful and versatile system.
+
+Also, it may be worthwhile to try to do a fusion of the statistical (CRF) and dictionary-based (MM) approaches for improved performance. In addition, for the CRF approach, we may not need to depend on only annotated data to train the model. We may also use raw un-segmented text and try to automatically learn words from bigram collocations. This could provide additional train data for the CRF approach.
+
+
+
+
+
